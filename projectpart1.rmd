@@ -1,0 +1,159 @@
+---
+title: "Project Part 1" 
+author: "Justin Heinrichs"
+fontsize: 12pt
+geometry: margin=1in
+urlcolor: black
+output: pdf_document
+header-includes:
+- \usepackage{setspace}
+- \onehalfspacing
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, highlight=FALSE)
+```
+
+**GitHub Repository:**\
+<https://github.com/justin-heinrichs/STAT3080_Project>
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(tidyverse)
+
+df <- read.csv("recidivismdata.csv")
+
+# add total rearrested and not_rearrested columns
+df$rearrested <- round(df$n * df$recid_rate)
+df$not_rearrested <- round(df$n - df$rearrested)
+
+
+```
+
+## Introduction
+
+Recidivism, which is the tendency of previously incarcerated individuals to reoffend, is a central concern in the study of crime and punishment. Understanding patterns of recividism is critical for evaluating the effectiveness of the criminal justice system, which can help inform policies aimed at reducing repeat offending.
+
+One important factor that may be associated with recidivism is the type of offense for which an individual was originally incarcerated. In particular, individuals convicted of property crimes (e.g., burglary, theft, and fraud) and individuals convicted of violent crimes (e.g., homicide, rape, and assault) may differ in their likelihood of reoffending.
+
+This study investigates whether the five-year rearrest rate differs between individuals released from prison after serving sentences for violent offenses and those released after serving sentences for property offenses. Using data from the Bureau of Justice Statistics on prisoners released in 2012 and tracked over a five-year period, the analysis compares the proportion of individuals in each group who were rearrested. The primary objective is to determine whether there is a statistically meaningful difference in recidivism rates between these two offense categories.
+
+## Data Summary
+
+The data represent a population-level dataset derived from the Bureau of Justice Statistics (BJS), specifically from a cohort of 408,300 prisoners released in 2012 across 34 U.S. states. These individuals were tracked over a five-year follow-up period (2012-2017) to determine whether they were rearrested.
+
+### Data Collection
+
+The BJS collected these data through administrative criminal justice records, including prison release records and subsequent arrest records, rather than through sampling. The data reflect a near-complete enumeration of released prisoners within the participating states.
+
+### Data Modifications
+
+The original data were published in aggregated table form. For the purposes of statistical analysis, the relevant values – specifically, the number of released property and violent crime prisoners and their respective five-year rearrest rates – were extracted and organized into a structured dataset.
+
+The number of individuals rearrested and not rearrested within each offense category was calculated by multiplying the reported recidivism rates by the corresponding group sizes. These values were rounded to the nearest whole number to reflect counts of individuals.
+
+### Data Limitations
+
+Several limitations should be noted. First, the counts of rearrested individuals were derived from reported percentages, introducing minor rounding error. Second, the data are observational and do not account for confounding variables such as age, prior criminal history, or socioeconomic factors, which may differ between offense groups and influence recidivism rates.
+
+Additionally, the dataset includes only 34 states and may not fully represent national or universal patterns. Finally, recidivism is measured as rearrest, which does not necessarily imply conviction and may be influenced by differences in policing practices across jurisdictions.
+
+### Appropriateness of Data
+
+The dataset is well-suited to the research question. it directly measures the proportion of individuals rearrested within five years for clearly defined groups based on most serious commitment offense. The large sample size and standardized data collection methods used by the Bureau of Justice Statistics provide a reliable basis for comparing recidivism rates between violent and property offenders.
+
+## Exploratory Data Analysis
+
+```{r, echo=FALSE}
+# numerical summaries
+summary_df <- data.frame(
+  Offense = df$offense,
+  Arrested = df$n,
+  Rearrested = df$rearrested,
+  Not_Rearrested = df$not_rearrested,
+  Recidivism_Rate = round(df$recid_rate * 100, 1)
+)
+
+summary_df
+
+# comparison numerical summary
+comparison_df <- data.frame(
+  Measure = c("Difference (Property - Violent)", "Ratio (Property / Violent)"),
+  Value = c(
+    paste0(
+      round(
+        (df$recid_rate[df$offense == "Property"] - 
+         df$recid_rate[df$offense == "Violent"]) * 100, 1
+      ), "%"
+    ),
+    round(
+      df$recid_rate[df$offense == "Property"] / 
+      df$recid_rate[df$offense == "Violent"], 3
+    )
+  )
+)
+
+comparison_df
+
+
+# graph of rates
+ggplot(df, aes(x=offense, y=recid_rate, fill=offense))+
+  geom_bar(stat="identity")+
+  geom_text(aes(label=scales::percent(recid_rate, accuracy=.1)), vjust=-.2) +
+  scale_y_continuous(labels = scales::percent)+
+  labs(
+    title="5-Year Recidivism Rate by Offense Type",
+    x = "Offense Type",
+    y = "Recidivism Rate",
+    fill = "Offense Type"
+  )+
+  theme_minimal()
+
+# graph of counts
+df_long <- data.frame(
+  offense = c("Violent", "Violent", "Property", "Property"),
+  status = c("Rearrested", "Not Rearrested", "Rearrested", "Not Rearrested"),
+  count = c(
+    df$rearrested[df$offense == "Violent"],
+    df$not_rearrested[df$offense == "Violent"],
+    df$rearrested[df$offense == "Property"],
+    df$not_rearrested[df$offense == "Property"]
+  )
+)
+
+ggplot(df_long, aes(x = offense, y = count, fill = status)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Number of Individuals Rearrested vs Not Rearrested",
+    x = "Offense Type",
+    y = "Count",
+    fill = "Status"
+  ) +
+  ylim(0,100000)+
+  theme_minimal()
+```
+
+## Conclusions
+
+The numerical and graphical summaries consistently show a clear difference in recidivism rates between property and violent offenders. Property offenders have a five-year recidivism rate of 78.3%, compared to 65.2% for violent offenders, representing a difference of 13.1 percentage points. This difference is also reflected in the count data, where approximately 90,500 property offenders were rearrested and 25,100 were not rearrested, compared to 73,200 violent offenders rearrested and 39,100 not rearrested. Because the group sizes are relatively similar (115,600 property offenders and 112,300 violent offenders), the higher number of rearrests among property offenders is primarily driven by their higher recidivism rate rather than differences in group size.
+
+The difference of 13.1 percentage points between the two groups represents a substantial gap in recidivism rates. Additionally, the ratio of 1.20 indicates that property offenders have an approximately 20% higher relative likelihood of rearrest compared to violent offenders.
+
+Across all summaries, the results consistently point to a disparity in recidivism outcomes between the two groups, suggesting that individuals convicted of property offenses may be more prone to repeat offending compared to those convicted of violent offenses. These findings may reflect differences in the underlying nature of these crimes, such as economic motivation, opportunity, or behavioral patterns, or differences in the post-release circumstances that influence the likelihood of rearrest.
+
+In the context of the research question, the exploratory analysis provides clear evidence that recidivism rates differ meaningfully between violent and property offenders. Property offenders exhibit both a higher rate and a greater number of rearrests within five years of release. While these results do not establish causation, they highlight an important pattern that warrants further statistical testing and analysis.
+
+\newpage
+
+## References
+
+Bureau of Justice Statistics. *Recidivism of Prisoners Released in 34 States in 2012: A 5-Year Follow-Up Period (2012–2017)*. U.S. Department of Justice, Office of Justice Programs, July 2021.\
+
+[https://bjs.ojp.gov/library/publications/recidivism-prisoners-released-34-states-2012-5-year-follow-period-2012-2017](https://bjs.ojp.gov/library/publications/recidivism-prisoners-released-34-states-2012-5-year-follow-period-2012-2017?utm_source=chatgpt.com)
+
+This project used ChatGPT (OpenAI) to assist with R coding, statistical clarification, and editing of written content.
+
+```{r}
+## R code to conduct the test in part 2.
+## This R code will be printed in the PDF.
+## Remove the ## before all code.
+```

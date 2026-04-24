@@ -1,0 +1,100 @@
+---
+title: "Project Part 2" 
+author: "Justin Heinrichs"
+fontsize: 12pt
+geometry: margin=1in
+urlcolor: black
+output: pdf_document
+header-includes:
+- \usepackage{setspace}
+- \onehalfspacing
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, highlight=FALSE)
+```
+
+**GitHub Repository:**\
+<https://github.com/justin-heinrichs/STAT3080_Project>
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(tidyverse)
+
+df <- read.csv("recidivismdata.csv")
+
+# add total rearrested and not_rearrested columns
+df$rearrested <- round(df$n * df$recid_rate)
+df$not_rearrested <- round(df$n - df$rearrested)
+
+```
+
+## Introduction
+
+Recidivism remains a critical issue in the criminal justice system, particularly in understanding differences across offense types. In Part 1 of this analysis, exploratory results showed that property offenders had a higher five-year recidivism rate (78.3%) compared to violent offenders (65.2%), a difference of 13.1 percentage points.
+
+This study now formally evaluates whether this observed difference reflects a statistically meaningful difference in recidivism rates between the two groups. Specifically, we test whether the proportion of individuals rearrested within five years differs between property and violent offenders.
+
+## Methods
+
+### Procedure
+
+A two-proportion z-test is used to compare the five-year recidivism rates between property and violent offenders. This procedure is appropriate because the response variable is binary (rearrested vs. not rearrested), and the analysis compares proportions between two independent groups defined by most serious commitment offense.
+
+### Hypotheses
+
+$H_0: p_{property} = p_{violent}$
+
+$H_A: p_{property} \neq p_{violent}$
+
+### Assumptions
+
+The required assumptions for this test are satisfied. First, the observations are independent within each group, ase each individual is counted once and contributes to a single outcome. Second, the two groups are independent of each other, since individuals are classified into only one offense category (violent or property). Third, the binary outcome assumption is met (rearrested vs not rearrested). Fourth, the success-failure condition is met. For violent offenders, there are approximately 73,200 rearrested individuals and 39,100 not rearrested individuals; for property offenders, there are approximately 90,500 rearrested individuals and 25,100 not rearrested individuals. All of these counts are far greater than 10, ensuring that the sampling distribution of the difference in proportions can be approximated by a normal distribution. Finally, the data originate from a sampled cohort collected by the Bureau of Justice Statistics and tracked through administrative records. While the data are not obtained through simple random sampling, the sampling design and large, diverse cohort provide a reasonable approximation of independent observations for the purposes of this analysis.
+
+```{r, echo=FALSE}
+prop.test(
+  x = c(73220, 90515),
+  n = c(112300, 115600),
+  alternative = "two.sided",
+  correct = FALSE
+)
+```
+
+## Results
+
+A two-proportion z-test was conducted to compare the five-year rearrest rates of violent and property offenders. The estimated recidivism rate was 65.2% for violent offenders and 78.3% for property offenders.The test produced a chi-square statistic of 4832.5 with 1 degree of freedom and a p-value less than .001.
+
+The 95% confidence interval for the difference in proportions (violent minus property) is (-.1347, -.1273), indicating that the recidivism rate for violent offenders is between approximately 12.7 adn 13.5 percentage points lower than that for property offenders.
+
+Because the p-value is less than .05, the result is statistically significant. We reject the null hypothesis and conclude that there is a statistically significant difference in recidivism rates between violent and property offenders.
+
+## Conclusions
+
+### Non-Statistical Interpretation
+
+The results indicate that individuals released from prison for property offenses are more likely to be rearrested within five years than those released for violent offenses. In practical terms, these results suggest that property offenders have a higher tendency to reoffend, at least as measured by rearrest, compared to violent offenders.
+
+### Limitations
+
+These results contain several limitations. The data are observational and do not account for confounding variables such as age, prior criminal history, or socioeconomic factors, which may influence recidivism rates. Additionally, recidivism is measured as rearrest, which does not necessarily imply convication and may vary due to difference in policing practices across jurisdictions.
+
+The dataset includes only 34 states and may not fully generalize to all released prisoners in the United States. Furthermore, the analysis is based on published estimates rather than raw individual-level data and does not incorporate the survey weighting procedures used by the Bureau of Justice Statistics. As a result, the statistical test represents a simplified approximation and may not fully capture the uncertainty associated with the complex sampling design.
+
+### Generalization
+
+Because the data are based on a large, multi-state sample collected by the Bureau of Justice Statistics, the results can reasonably be generalized to other populations of released prisoners in the United States. However, caution should be exercised when extending these findings beyond the sampled states or to different time periods, as variations in policies, demographics, and economic conditions may affect recidivism patterns.
+
+\newpage
+
+## References
+
+Bureau of Justice Statistics. *Recidivism of Prisoners Released in 34 States in 2012: A 5-Year Follow-Up Period (2012–2017)*. U.S. Department of Justice, Office of Justice Programs, July 2021.\
+
+<https://bjs.ojp.gov/library/publications/recidivism-prisoners-released-34-states-2012-5-year-follow-period-2012-2017>
+
+<https://www.sthda.com/english/wiki/two-proportions-z-test-in-r#research-questions-and-statistical-hypotheses>
+
+<https://sixsigmastudyguide.com/two-sample-test-of-proportions/>
+
+<https://www.sentencingproject.org/reports/a-new-lease-on-life/>
+
+ChatGPT (OpenAI) was used to assist with R coding, statistical clarification, and editing of written content. All final decisions, interpretations, and conclusions were made by the author.
